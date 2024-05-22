@@ -78,6 +78,9 @@ if len(st.session_state["messages"]) < 6:
     # A chat input will add the corresponding prompt to the st.session_state["messages"]
     if prompt := st.chat_input("How can I help you?"):
 
+        activity = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ": " + prompt
+        logger.info("prompt:" + activity)
+
         st.session_state["messages"].append({"role": "user", "content": prompt})
 
         # and display it in the chat history
