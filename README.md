@@ -15,7 +15,7 @@ The video below shows how they integrate into the UI:
 ![Streamlit Chat Improved UI](./images/streamlit-chat-improvement-30.gif)
 
 
-The logs corresponding to the feedbacks buttons are:
+The logs corresponding to the feedback buttons are:
 
 ```
 INFO:root:2024-05-22 14:35:23: positive: [{"role": "user", "content": "1+1"}, {"role": "assistant", "content": "1+1 equals 2."}]
