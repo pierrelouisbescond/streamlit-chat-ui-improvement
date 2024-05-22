@@ -6,13 +6,21 @@ This side project aims to add new functionalities to the standard [Streamlit cha
 -   📥 Chat history export (in JSON format)
 -   🧹 Clear chat
 -   🔁 Rerun last question
--   👍 and 👎 feedback buttons
+-   👍 and 👎 feedback buttons (registered in the logs)
 -   💬 tokens count
 -   👩‍💻 chat avatars personalization
 
 The video below shows how they integrate into the UI:
 
 ![Streamlit Chat Improved UI](./images/streamlit-chat-improvement-30.gif)
+
+
+The logs corresponding to the feedbacks buttons are:
+
+```
+INFO:root:2024-05-22 14:35:23: positive: [{"role": "user", "content": "1+1"}, {"role": "assistant", "content": "1+1 equals 2."}]
+INFO:root:2024-05-22 14:35:30: negative: [{"role": "user", "content": "2+2"}, {"role": "assistant", "content": "2 + 2 equals 4."}]
+```
 
 The demo hosted [here](https://chat-ui-improvement.streamlit.app/) is limited to 3 questions and/or 300 tokens.
 
