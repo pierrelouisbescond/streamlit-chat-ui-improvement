@@ -14,6 +14,10 @@ logging.basicConfig(encoding="UTF-8", level=logging.INFO)
 
 st.title("🤩 Improved Streamlit Chat UI")
 
+# Secrets to be stored in /.streamlit/secrets.toml
+# OPENAI_API_ENDPOINT = "https://xxx.openai.azure.com/"
+# OPENAI_API_KEY = "efpgishhn2kwlnk9928avd6vrh28wkdj" (this is a fake key 😉)
+
 # To be used with standard OpenAI API
 # client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
@@ -70,13 +74,17 @@ if len(st.session_state["messages"]) < 8:
         ):
             st.markdown(message["content"])
 
+    # A chat input will add the corresponding prompt to the st.session_state["messages"]
     if prompt := st.chat_input("How can I help you?"):
 
         st.session_state["messages"].append({"role": "user", "content": prompt})
 
+        # and display it in the chat history
         with st.chat_message("user", avatar=user_avatar):
             st.markdown(prompt)
 
+    # If the prompt is initialized or if the user is asking for a rerun, we
+    # launch the chat completion by the LLM
     if prompt or ("rerun" in st.session_state and st.session_state["rerun"]):
 
         with st.chat_message("assistant", avatar=assistant_avatar):
@@ -87,80 +95,87 @@ if len(st.session_state["messages"]) < 8:
                     for m in st.session_state["messages"]
                 ],
                 stream=True,
-                max_tokens=300,
+                max_tokens=300,  # Limited to 300 tokens for demo purposes
             )
             response = st.write_stream(stream)
         st.session_state["messages"].append({"role": "assistant", "content": response})
 
+        # In case this is a rerun, we set the "rerun" state back to False
         if "rerun" in st.session_state and st.session_state["rerun"]:
             st.session_state["rerun"] = False
 
-    if len(st.session_state["messages"]) > 0:
+# If there is at least one message in the chat, we display the options
+if len(st.session_state["messages"]) > 0:
 
-        cols_dimensions = [7, 19.4, 19.3, 9, 8.6, 8.6, 28.1]
-        col0, col1, col2, col3, col4, col5, col6 = st.columns(cols_dimensions)
+    # We set the space between the icons thanks to a share of 100
+    cols_dimensions = [7, 19.4, 19.3, 9, 8.6, 8.6, 28.1]
+    col0, col1, col2, col3, col4, col5, col6 = st.columns(cols_dimensions)
 
-        with col1:
+    with col1:
 
-            # Converts the list of messages into a JSON Bytes format
-            json_messages = json.dumps(st.session_state["messages"]).encode("utf-8")
+        # Converts the list of messages into a JSON Bytes format
+        json_messages = json.dumps(st.session_state["messages"]).encode("utf-8")
 
-            st.download_button(
-                label="📥 Save chat!",
-                data=json_messages,
-                file_name="chat_conversation.json",
-                mime="application/json",
-            )
+        # And the corresponding Download button
+        st.download_button(
+            label="📥 Save chat!",
+            data=json_messages,
+            file_name="chat_conversation.json",
+            mime="application/json",
+        )
 
-        with col2:
-            if st.button("Clear Chat 🧹"):
-                st.session_state["messages"] = []
-                st.rerun()
+    with col2:
 
-        with col3:
-            icon = "🔁"
-            if st.button(icon):
-                st.session_state["rerun"] = True
-                st.rerun()
+        # We set the message back to 0 and rerun the app
+        # (this part could probably be improved with the cache option)
+        if st.button("Clear Chat 🧹"):
+            st.session_state["messages"] = []
+            st.rerun()
 
-        with col4:
-            icon = "👍"
-            if st.button(icon):
-                log_feedback(icon)
+    with col3:
+        icon = "🔁"
+        if st.button(icon):
+            st.session_state["rerun"] = True
+            st.rerun()
 
-        with col5:
-            icon = "👎"
-            if st.button(icon):
-                log_feedback(icon)
+    with col4:
+        icon = "👍"
 
-        with col6:
-            enc = tiktoken.get_encoding("cl100k_base")
-            tokenized_full_text = enc.encode(
-                " ".join([item["content"] for item in st.session_state["messages"]])
-            )
-            label = f"💬 {len(tokenized_full_text)} tokens"
-            st.link_button(label, "https://platform.openai.com/tokenizer")
+        # The button will trigger the logging function
+        if st.button(icon):
+            log_feedback(icon)
 
-    else:
+    with col5:
+        icon = "👎"
 
-        if "disclaimer" not in st.session_state:
-            with st.empty():
-                for seconds in range(3):
-                    st.warning(
-                        "‎ You can click on 👍 or 👎 to provide feedback regarding the quality of responses.",
-                        icon="💡",
-                    )
-                    time.sleep(1)
-                st.write("")
-                st.session_state["disclaimer"] = True
+        # The button will trigger the logging function
+        if st.button(icon):
+            log_feedback(icon)
 
-        else:
+    with col6:
 
-            pass
+        # We initiate a tokenizer
+        enc = tiktoken.get_encoding("cl100k_base")
 
-    if "last_prompt" in st.session_state:
-        st.write(st.session_state["last_prompt"])
+        # We encode the messages
+        tokenized_full_text = enc.encode(
+            " ".join([item["content"] for item in st.session_state["messages"]])
+        )
+
+        # And display the corresponding number of tokens
+        label = f"💬 {len(tokenized_full_text)} tokens"
+        st.link_button(label, "https://platform.openai.com/tokenizer")
 
 else:
 
-    st.error("You have reached the demo maximum messages.")
+    # At the first run of a session, we temporarly display a message
+    if "disclaimer" not in st.session_state:
+        with st.empty():
+            for seconds in range(3):
+                st.warning(
+                    "‎ You can click on 👍 or 👎 to provide feedback regarding the quality of responses.",
+                    icon="💡",
+                )
+                time.sleep(1)
+            st.write("")
+            st.session_state["disclaimer"] = True
