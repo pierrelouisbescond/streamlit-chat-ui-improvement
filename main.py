@@ -12,6 +12,9 @@ from openai import AzureOpenAI  # 1.30.1
 logger = logging.getLogger()
 logging.basicConfig(encoding="UTF-8", level=logging.INFO)
 
+st.set_page_config(page_title="Streamlit Chat Interface Improvement",
+                   page_icon="🤩")
+
 st.title("🤩 Improved Streamlit Chat UI")
 
 # Secrets to be stored in /.streamlit/secrets.toml
