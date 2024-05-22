@@ -56,7 +56,8 @@ if "openai_model" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
-if len(st.session_state["messages"]) < 8:
+# This condition prevents from abusive use of the demo
+if len(st.session_state["messages"]) < 6:
 
     user_avatar = "👩‍💻"
     assistant_avatar = "🤖"
@@ -104,78 +105,82 @@ if len(st.session_state["messages"]) < 8:
         if "rerun" in st.session_state and st.session_state["rerun"]:
             st.session_state["rerun"] = False
 
-# If there is at least one message in the chat, we display the options
-if len(st.session_state["messages"]) > 0:
+    # If there is at least one message in the chat, we display the options
+    if len(st.session_state["messages"]) > 0:
 
-    # We set the space between the icons thanks to a share of 100
-    cols_dimensions = [7, 19.4, 19.3, 9, 8.6, 8.6, 28.1]
-    col0, col1, col2, col3, col4, col5, col6 = st.columns(cols_dimensions)
+        # We set the space between the icons thanks to a share of 100
+        cols_dimensions = [7, 19.4, 19.3, 9, 8.6, 8.6, 28.1]
+        col0, col1, col2, col3, col4, col5, col6 = st.columns(cols_dimensions)
 
-    with col1:
+        with col1:
 
-        # Converts the list of messages into a JSON Bytes format
-        json_messages = json.dumps(st.session_state["messages"]).encode("utf-8")
+            # Converts the list of messages into a JSON Bytes format
+            json_messages = json.dumps(st.session_state["messages"]).encode("utf-8")
 
-        # And the corresponding Download button
-        st.download_button(
-            label="📥 Save chat!",
-            data=json_messages,
-            file_name="chat_conversation.json",
-            mime="application/json",
-        )
+            # And the corresponding Download button
+            st.download_button(
+                label="📥 Save chat!",
+                data=json_messages,
+                file_name="chat_conversation.json",
+                mime="application/json",
+            )
 
-    with col2:
+        with col2:
 
-        # We set the message back to 0 and rerun the app
-        # (this part could probably be improved with the cache option)
-        if st.button("Clear Chat 🧹"):
-            st.session_state["messages"] = []
-            st.rerun()
+            # We set the message back to 0 and rerun the app
+            # (this part could probably be improved with the cache option)
+            if st.button("Clear Chat 🧹"):
+                st.session_state["messages"] = []
+                st.rerun()
 
-    with col3:
-        icon = "🔁"
-        if st.button(icon):
-            st.session_state["rerun"] = True
-            st.rerun()
+        with col3:
+            icon = "🔁"
+            if st.button(icon):
+                st.session_state["rerun"] = True
+                st.rerun()
 
-    with col4:
-        icon = "👍"
+        with col4:
+            icon = "👍"
 
-        # The button will trigger the logging function
-        if st.button(icon):
-            log_feedback(icon)
+            # The button will trigger the logging function
+            if st.button(icon):
+                log_feedback(icon)
 
-    with col5:
-        icon = "👎"
+        with col5:
+            icon = "👎"
 
-        # The button will trigger the logging function
-        if st.button(icon):
-            log_feedback(icon)
+            # The button will trigger the logging function
+            if st.button(icon):
+                log_feedback(icon)
 
-    with col6:
+        with col6:
 
-        # We initiate a tokenizer
-        enc = tiktoken.get_encoding("cl100k_base")
+            # We initiate a tokenizer
+            enc = tiktoken.get_encoding("cl100k_base")
 
-        # We encode the messages
-        tokenized_full_text = enc.encode(
-            " ".join([item["content"] for item in st.session_state["messages"]])
-        )
+            # We encode the messages
+            tokenized_full_text = enc.encode(
+                " ".join([item["content"] for item in st.session_state["messages"]])
+            )
 
-        # And display the corresponding number of tokens
-        label = f"💬 {len(tokenized_full_text)} tokens"
-        st.link_button(label, "https://platform.openai.com/tokenizer")
+            # And display the corresponding number of tokens
+            label = f"💬 {len(tokenized_full_text)} tokens"
+            st.link_button(label, "https://platform.openai.com/tokenizer")
+
+    else:
+
+        # At the first run of a session, we temporarly display a message
+        if "disclaimer" not in st.session_state:
+            with st.empty():
+                for seconds in range(3):
+                    st.warning(
+                        "‎ You can click on 👍 or 👎 to provide feedback regarding the quality of responses.",
+                        icon="💡",
+                    )
+                    time.sleep(1)
+                st.write("")
+                st.session_state["disclaimer"] = True
 
 else:
 
-    # At the first run of a session, we temporarly display a message
-    if "disclaimer" not in st.session_state:
-        with st.empty():
-            for seconds in range(3):
-                st.warning(
-                    "‎ You can click on 👍 or 👎 to provide feedback regarding the quality of responses.",
-                    icon="💡",
-                )
-                time.sleep(1)
-            st.write("")
-            st.session_state["disclaimer"] = True
+    st.error("‎ You've reached the demo limit!", icon="⛔")
