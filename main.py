@@ -5,11 +5,12 @@ import time
 import tiktoken
 
 from datetime import datetime
+
 # from openai import OpenAI  # 1.30.1
 from openai import AzureOpenAI  # 1.30.1
 
 logger = logging.getLogger()
-logging.basicConfig(encoding='UTF-8', level=logging.INFO)
+logging.basicConfig(encoding="UTF-8", level=logging.INFO)
 
 st.title("🤩 Improved Streamlit Chat UI")
 
@@ -20,14 +21,14 @@ st.title("🤩 Improved Streamlit Chat UI")
 client = AzureOpenAI(
     azure_endpoint=st.secrets["OPENAI_API_ENDPOINT"],
     api_key=st.secrets["OPENAI_API_KEY"],
-    api_version="2024-02-15-preview"
+    api_version="2024-02-15-preview",
 )
 
 
 # This function logs the last question and answer in the chat messages
 def log_feedback(icon):
     # We display a nice toast
-    st.toast('Thanks for your feedback!', icon="👌")
+    st.toast("Thanks for your feedback!", icon="👌")
 
     # We retrieve the last question and answer
     last_messages = json.dumps(st.session_state["messages"][-2:])
@@ -63,8 +64,10 @@ if len(st.session_state["messages"]) < 8:
 
     # We rebuild the previous conversation stored in st.session_state["messages"] with the corresponding emojis
     for message in st.session_state["messages"]:
-        with st.chat_message(message["role"],
-                             avatar=assistant_avatar if message["role"] == "assistant" else user_avatar):
+        with st.chat_message(
+            message["role"],
+            avatar=assistant_avatar if message["role"] == "assistant" else user_avatar,
+        ):
             st.markdown(message["content"])
 
     if prompt := st.chat_input("How can I help you?"):
@@ -84,12 +87,12 @@ if len(st.session_state["messages"]) < 8:
                     for m in st.session_state["messages"]
                 ],
                 stream=True,
-                max_tokens=300
+                max_tokens=300,
             )
             response = st.write_stream(stream)
         st.session_state["messages"].append({"role": "assistant", "content": response})
 
-        if ("rerun" in st.session_state and st.session_state["rerun"]):
+        if "rerun" in st.session_state and st.session_state["rerun"]:
             st.session_state["rerun"] = False
 
     if len(st.session_state["messages"]) > 0:
@@ -100,12 +103,14 @@ if len(st.session_state["messages"]) < 8:
         with col1:
 
             # Converts the list of messages into a JSON Bytes format
-            json_messages = json.dumps(st.session_state["messages"]).encode('utf-8')
+            json_messages = json.dumps(st.session_state["messages"]).encode("utf-8")
 
-            st.download_button(label="📥 Save chat!",
-                               data=json_messages,
-                               file_name="chat_conversation.json",
-                               mime="application/json")
+            st.download_button(
+                label="📥 Save chat!",
+                data=json_messages,
+                file_name="chat_conversation.json",
+                mime="application/json",
+            )
 
         with col2:
             if st.button("Clear Chat 🧹"):
@@ -130,7 +135,9 @@ if len(st.session_state["messages"]) < 8:
 
         with col6:
             enc = tiktoken.get_encoding("cl100k_base")
-            tokenized_full_text = enc.encode(' '.join([item["content"] for item in st.session_state["messages"]]))
+            tokenized_full_text = enc.encode(
+                " ".join([item["content"] for item in st.session_state["messages"]])
+            )
             label = f"💬 {len(tokenized_full_text)} tokens"
             st.link_button(label, "https://platform.openai.com/tokenizer")
 
@@ -139,7 +146,10 @@ if len(st.session_state["messages"]) < 8:
         if "disclaimer" not in st.session_state:
             with st.empty():
                 for seconds in range(3):
-                    st.warning('‎ You can click on 👍 or 👎 to provide feedback regarding the quality of responses.', icon="💡")
+                    st.warning(
+                        "‎ You can click on 👍 or 👎 to provide feedback regarding the quality of responses.",
+                        icon="💡",
+                    )
                     time.sleep(1)
                 st.write("")
                 st.session_state["disclaimer"] = True
