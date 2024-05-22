@@ -56,53 +56,51 @@ if "openai_model" not in st.session_state:
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
-if len(st.session_state["messages"]) < 8:
+user_avatar = "👩‍💻"
+assistant_avatar = "🤖"
 
-    user_avatar = "👩‍💻"
-    assistant_avatar = "🤖"
+# In case of rerun of the last question, we remove the last answer from st.session_state["messages"]
+if "rerun" in st.session_state and st.session_state["rerun"]:
 
-    # In case of rerun of the last question, we remove the last answer from st.session_state["messages"]
+    st.session_state["messages"].pop(-1)
+
+# We rebuild the previous conversation stored in st.session_state["messages"] with the corresponding emojis
+for message in st.session_state["messages"]:
+    with st.chat_message(
+        message["role"],
+        avatar=assistant_avatar if message["role"] == "assistant" else user_avatar,
+    ):
+        st.markdown(message["content"])
+
+# A chat input will add the corresponding prompt to the st.session_state["messages"]
+if prompt := st.chat_input("How can I help you?"):
+
+    st.session_state["messages"].append({"role": "user", "content": prompt})
+
+    # and display it in the chat history
+    with st.chat_message("user", avatar=user_avatar):
+        st.markdown(prompt)
+
+# If the prompt is initialized or if the user is asking for a rerun, we
+# launch the chat completion by the LLM
+if prompt or ("rerun" in st.session_state and st.session_state["rerun"]):
+
+    with st.chat_message("assistant", avatar=assistant_avatar):
+        stream = client.chat.completions.create(
+            model=st.session_state["openai_model"],
+            messages=[
+                {"role": m["role"], "content": m["content"]}
+                for m in st.session_state["messages"]
+            ],
+            stream=True,
+            max_tokens=300,  # Limited to 300 tokens for demo purposes
+        )
+        response = st.write_stream(stream)
+    st.session_state["messages"].append({"role": "assistant", "content": response})
+
+    # In case this is a rerun, we set the "rerun" state back to False
     if "rerun" in st.session_state and st.session_state["rerun"]:
-
-        st.session_state["messages"].pop(-1)
-
-    # We rebuild the previous conversation stored in st.session_state["messages"] with the corresponding emojis
-    for message in st.session_state["messages"]:
-        with st.chat_message(
-            message["role"],
-            avatar=assistant_avatar if message["role"] == "assistant" else user_avatar,
-        ):
-            st.markdown(message["content"])
-
-    # A chat input will add the corresponding prompt to the st.session_state["messages"]
-    if prompt := st.chat_input("How can I help you?"):
-
-        st.session_state["messages"].append({"role": "user", "content": prompt})
-
-        # and display it in the chat history
-        with st.chat_message("user", avatar=user_avatar):
-            st.markdown(prompt)
-
-    # If the prompt is initialized or if the user is asking for a rerun, we
-    # launch the chat completion by the LLM
-    if prompt or ("rerun" in st.session_state and st.session_state["rerun"]):
-
-        with st.chat_message("assistant", avatar=assistant_avatar):
-            stream = client.chat.completions.create(
-                model=st.session_state["openai_model"],
-                messages=[
-                    {"role": m["role"], "content": m["content"]}
-                    for m in st.session_state["messages"]
-                ],
-                stream=True,
-                max_tokens=300,  # Limited to 300 tokens for demo purposes
-            )
-            response = st.write_stream(stream)
-        st.session_state["messages"].append({"role": "assistant", "content": response})
-
-        # In case this is a rerun, we set the "rerun" state back to False
-        if "rerun" in st.session_state and st.session_state["rerun"]:
-            st.session_state["rerun"] = False
+        st.session_state["rerun"] = False
 
 # If there is at least one message in the chat, we display the options
 if len(st.session_state["messages"]) > 0:
