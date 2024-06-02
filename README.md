@@ -5,14 +5,17 @@ This side project aims to add new functionalities to the standard [Streamlit cha
 
 -   📥 Chat history export (in JSON format)
 -   🧹 Clear chat
+-   🎨 Image upload (or any another file) thanks to [```st.experimental_dialog```](https://docs.streamlit.io/develop/api-reference/execution-flow/st.dialog) (Streamlit ≥ 1.35.0)
 -   🔁 Rerun last question
 -   👍 and 👎 feedback buttons (registered in the logs)
 -   💬 tokens count
 -   👩‍💻 chat avatars personalization
 
+**[01/06 update]**: Thanks to the awesome work of [bouzidanas](https://github.com/bouzidanas)  and its [```streamlit-float```](https://github.com/bouzidanas/streamlit-float) library, the chat options stay close to the chat input 🤩.
+
 The video below shows how they integrate into the UI:
 
-![Streamlit Chat Improved UI](./images/streamlit-chat-improvement-30.gif)
+![Streamlit Chat Improved UI](./images/20240601-streamlit-chat-improvement-50.gif)
 
 
 The logs corresponding to the feedback buttons are:

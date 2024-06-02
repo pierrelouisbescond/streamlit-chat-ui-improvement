@@ -5,6 +5,7 @@ import time
 import tiktoken
 
 from datetime import datetime
+from streamlit_float import *
 
 # from openai import OpenAI  # 1.30.1
 from openai import AzureOpenAI  # 1.30.1
@@ -12,8 +13,7 @@ from openai import AzureOpenAI  # 1.30.1
 logger = logging.getLogger()
 logging.basicConfig(encoding="UTF-8", level=logging.INFO)
 
-st.set_page_config(page_title="Streamlit Chat Interface Improvement",
-                   page_icon="🤩")
+st.set_page_config(page_title="Streamlit Chat Interface Improvement", page_icon="🤩")
 
 st.title("🤩 Improved Streamlit Chat UI")
 
@@ -51,6 +51,24 @@ def log_feedback(icon):
     logger.info(activity)
 
 
+@st.experimental_dialog("🎨 Upload a picture")
+def upload_document():
+    st.warning(
+        "This is a demo dialog window. You need to process the file afterwards.",
+        icon="💡",
+    )
+    picture = st.file_uploader(
+        "Choose a file", type=["jpg", "png", "bmp"], label_visibility="hidden"
+    )
+    if picture:
+        st.session_state["uploaded_pic"] = True
+        st.rerun()
+
+
+if "uploaded_pic" in st.session_state and st.session_state["uploaded_pic"]:
+    st.toast("Picture uploaded!", icon="📥")
+    del st.session_state["uploaded_pic"]
+
 # Model Choice - Name to be adapter to your deployment
 if "openai_model" not in st.session_state:
     st.session_state["openai_model"] = "gpt-35-turbo"
@@ -84,6 +102,7 @@ if prompt := st.chat_input("How can I help you?"):
     with st.chat_message("user", avatar=user_avatar):
         st.markdown(prompt)
 
+
 # If the prompt is initialized or if the user is asking for a rerun, we
 # launch the chat completion by the LLM
 if prompt or ("rerun" in st.session_state and st.session_state["rerun"]):
@@ -105,12 +124,23 @@ if prompt or ("rerun" in st.session_state and st.session_state["rerun"]):
     if "rerun" in st.session_state and st.session_state["rerun"]:
         st.session_state["rerun"] = False
 
+st.write("")
+
 # If there is at least one message in the chat, we display the options
 if len(st.session_state["messages"]) > 0:
 
+    action_buttons_container = st.container()
+    action_buttons_container.float(
+        "bottom: 6.9rem;background-color: var(--default-backgroundColor); padding-top: 1rem;"
+    )
+
     # We set the space between the icons thanks to a share of 100
-    cols_dimensions = [7, 19.4, 19.3, 9, 8.6, 8.6, 28.1]
-    col0, col1, col2, col3, col4, col5, col6 = st.columns(cols_dimensions)
+    cols_dimensions = [7, 14.9, 14.5, 9.1, 9, 8.6, 8.7]
+    cols_dimensions.append(100 - sum(cols_dimensions))
+
+    col0, col1, col2, col3, col4, col5, col6, col7 = action_buttons_container.columns(
+        cols_dimensions
+    )
 
     with col1:
 
@@ -119,7 +149,7 @@ if len(st.session_state["messages"]) > 0:
 
         # And the corresponding Download button
         st.download_button(
-            label="📥 Save chat!",
+            label="📥 Save!",
             data=json_messages,
             file_name="chat_conversation.json",
             mime="application/json",
@@ -129,31 +159,40 @@ if len(st.session_state["messages"]) > 0:
 
         # We set the message back to 0 and rerun the app
         # (this part could probably be improved with the cache option)
-        if st.button("Clear Chat 🧹"):
+        if st.button("Clear 🧹"):
             st.session_state["messages"] = []
+
+            if "uploaded_pic" in st.session_state:
+                del st.session_state["uploaded_pic"]
+
             st.rerun()
 
     with col3:
+
+        if st.button("🎨"):
+            upload_document()
+
+    with col4:
         icon = "🔁"
         if st.button(icon):
             st.session_state["rerun"] = True
             st.rerun()
 
-    with col4:
+    with col5:
         icon = "👍"
 
         # The button will trigger the logging function
         if st.button(icon):
             log_feedback(icon)
 
-    with col5:
+    with col6:
         icon = "👎"
 
         # The button will trigger the logging function
         if st.button(icon):
             log_feedback(icon)
 
-    with col6:
+    with col7:
 
         # We initiate a tokenizer
         enc = tiktoken.get_encoding("cl100k_base")
